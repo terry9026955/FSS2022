@@ -117,3 +117,14 @@ SynchConsoleOutput::CallBack()
 {
     waitFor->V();
 }
+
+
+//add new one, HW1
+void
+SynchConsoleOutput::PutCharArray(char *ch, int len)
+{
+    lock->Acquire();
+    consoleOutput->PutCharArray(ch, len);
+    waitFor->P();
+    lock->Release();
+}

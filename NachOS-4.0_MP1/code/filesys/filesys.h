@@ -52,25 +52,25 @@ class FileSystem {
 	}
 
     bool Create(char *name) {
-	int fileDescriptor = OpenForWrite(name);
+		int fileDescriptor = OpenForWrite(name);
 
-	if (fileDescriptor == -1) return FALSE;
-	Close(fileDescriptor); 
-	return TRUE; 
+		if (fileDescriptor == -1) return FALSE;
+		Close(fileDescriptor); 
+		return TRUE; 
 	}
 
     OpenFile* Open(char *name) {
 	//int Open(char *name) {
-	  int fileDescriptor = OpenForReadWrite(name, FALSE);
+		int fileDescriptor = OpenForReadWrite(name, FALSE);
 
-	  if (fileDescriptor == -1) return NULL;
-	  OpenFile* f = new OpenFile(fileDescriptor);
-      fileDescriptorTable[fileDescriptor]=f; //將file pointer放入table中
-      //return fileDescriptor;
-	  return new OpenFile(fileDescriptor);
-      }
+	  	if (fileDescriptor == -1) return NULL;
+	  	/*OpenFile* f = new OpenFile(fileDescriptor);
+      	fileDescriptorTable[fileDescriptor]=f; //將file pointer放入table中
+      	//return fileDescriptor;*/
+	  	return new OpenFile(fileDescriptor);
+    }
 	
-	int Read(int fd, char* buf, int size){
+	/*int Read(int fd, char* buf, int size){
        if(fd<0 || fd>19) //檢查是否有超過filedescriptorteble的界線
               return FALSE;
        OpenFile* fp =  fileDescriptorTable[fd];//取得table中的object
@@ -78,12 +78,12 @@ class FileSystem {
               return FALSE;
        else
               return fp->Read(buf,size);//對object進行操作
-    }
+    }*/
 	
 
 	
 
-	
+	/*
 	//implementation put in here
 	//Open!
 	int OpenAFile(char *name) {	//OpenFileId change to int
@@ -133,7 +133,7 @@ class FileSystem {
 	int OpenFileTable[20];	
 
 	//implementation put in here
-	
+	*/
 
     bool Remove(char *name) { return Unlink(name) == 0; }
 

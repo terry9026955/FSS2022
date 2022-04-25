@@ -48,6 +48,9 @@
 //	is in machine.h.
 //----------------------------------------------------------------------
 
+#define MAX 10
+
+
 char itoa(int num)
 {
 	char c;
@@ -87,24 +90,64 @@ char itoa(int num)
 		return c;
 }
 
+int new_value(int val, char* input){
+	int temp = val;
+	int len = 0;
+	char temp_ch[MAX];
+	if(temp-1 == 0){
+       	temp_ch[len] = '0';
+       	return 0;
+   	}
+   	while (temp-1 >= 0){
+  		temp_ch[len] = itoa(temp%10);
+ 		temp = temp / 10;
+       	len = len+1;
+	}
+	len = len - 1 ;
+	for(int i=len; i>=0; i--){
+		input[len-i] = temp_ch[i];
+	}
+	len = len + 1;
+	input[len] = '\n';
+	return len;
+}
+
+
 
 void
 ExceptionHandler(ExceptionType which)
 {
 	int type = kernel->machine->ReadRegister(2);
+	int val;
+	int status, exit, threadID, programID;
+	OpenFile* file;
+	DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
+	/*int type = kernel->machine->ReadRegister(2);
 	int status, exit, threadID, programID, fileID, numChar;
 	char ch;
 	int val, filename_addr, buf_addr, size_addr, id_addr;
 	OpenFileId id;	//change OpenFileId to int
-	int size;
-	DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
+	int size;*/
+	//DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
 	//DEBUG(dbgTraCode, "In ExceptionHandler(), Reveived Exception " << witch << "\n");
     switch (which) {
     case SyscallException:
 		switch(type) 
 		{
 		case SC_Open:
-			DEBUG(dbgSys, "SC_Open, open a file and return OpenFileid. \n");
+			val = kernel->machine->ReadRegister(4);
+			{
+				char *filename = &(kernel->machine->mainMemory[val]);
+				status = OpenForReadWrite(filename, false);
+				kernel->machine->WriteRegister(2, (int)status);
+			}
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			return;
+			ASSERTNOTREACHED();
+			break;
+			/*DEBUG(dbgSys, "SC_Open, open a file and return OpenFileid. \n");
 			filename_addr = kernel->machine->ReadRegister(4);
 			{
 			char *filename = &(kernel->machine->mainMemory[filename_addr]);
@@ -117,7 +160,7 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
 			return;
 			ASSERTNOTREACHED();
-			break;
+			break;*/
 			/*val = kernel->machine->ReadRegister(4);
                         {
                         char *filename = &(kernel->machine->mainMemory[val]);
@@ -131,6 +174,21 @@ ExceptionHandler(ExceptionType which)
                         ASSERTNOTREACHED();
                         break;*/
 		case SC_Read:
+			{
+			val = kernel->machine->ReadRegister(4);
+			char *buffer = &(kernel->machine->mainMemory[val]);
+			int size = (int)kernel->machine->ReadRegister(5);
+			file = new OpenFile((int)kernel->machine->ReadRegister(6));
+			int count = file->Read(buffer, size);
+			status = (count == size) ? size : -1;
+			kernel->machine->WriteRegister(2, (int)status);
+			}
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			return;
+			ASSERTNOTREACHED();
+			break;
 			/*val = kernel->machine->ReadRegister(4);
                         {
                         int s = kernel->machine->ReadRegister(5); //把size從reg5讀取出來
@@ -146,7 +204,7 @@ ExceptionHandler(ExceptionType which)
                         ASSERTNOTREACHED();
                         break;
 			*/
-			buf_addr = kernel->machine->ReadRegister(4);
+			/*buf_addr = kernel->machine->ReadRegister(4);
 			size = kernel->machine->ReadRegister(5);
 			id = kernel->machine->ReadRegister(6);		
 			{
@@ -161,9 +219,24 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
 			return;
 			ASSERTNOTREACHED();
-			break;
+			break;*/
 		case SC_Write:
-			DEBUG(dbgSys, "SC_Write, write buf into a file(id), with size of element(each sizeof(char)).\n");
+			{
+			val = kernel->machine->ReadRegister(4);
+			char *buffer = &(kernel->machine->mainMemory[val]);
+			int size = (int)kernel->machine->ReadRegister(5);
+			file = new OpenFile((int)kernel->machine->ReadRegister(6));
+			int count = file->WriteAt(buffer, size, file->Length());
+			status = (count == size) ? size : -1;
+			kernel->machine->WriteRegister(2, (int)status);
+			}
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			return;
+			ASSERTNOTREACHED();
+			break;
+			/*DEBUG(dbgSys, "SC_Write, write buf into a file(id), with size of element(each sizeof(char)).\n");
 			buf_addr = kernel->machine->ReadRegister(4);
 			size = kernel->machine->ReadRegister(5);
 			id = kernel->machine->ReadRegister(6);	
@@ -179,9 +252,20 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
 			return;
 			ASSERTNOTREACHED();
-			break;
+			break;*/
 		case SC_Close:
-			DEBUG(dbgSys, "SC_Close, close a file with OpenFileid.\n");
+			val = kernel->machine->ReadRegister(4);
+			{
+			status = (Close(val) == 0) ? 1 : 0;
+			kernel->machine->WriteRegister(2, (int)status);
+			}
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			return;
+			ASSERTNOTREACHED();
+			break;
+			/*DEBUG(dbgSys, "SC_Close, close a file with OpenFileid.\n");
 			id = kernel->machine->ReadRegister(4);
 			{
 			status = SysClose(id);
@@ -194,7 +278,7 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
 			return;
 			ASSERTNOTREACHED();
-			break;
+			break;*/
 		case SC_Halt:
 			DEBUG(dbgSys, "Shutdown, initiated by user program.\n");
 			SysHalt();
@@ -224,8 +308,8 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg)+4);
 			return;
 			ASSERTNOTREACHED();
-            break;
-      	case SC_Add:
+            		break;
+      		case SC_Add:
 			DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
 			/* Process SysAdd Systemcall*/
 			int result;
@@ -248,9 +332,31 @@ ExceptionHandler(ExceptionType which)
 			cout << "result is " << result << "\n";	
 			return;	
 			ASSERTNOTREACHED();
-            break;
+            		break;
 		case SC_PrintInt:
 			val = kernel->machine->ReadRegister(4);
+
+			char input[MAX];
+			int len;
+			len = new_value(val, input);
+			kernel->synchConsoleOut->PutCharArray(input, len);
+
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			
+			return;
+			ASSERTNOTREACHED();
+			break;
+
+
+			/*val = kernel->machine->ReadRegister(4);
+			char input[MAX];
+			int len;
+			len = new_value(val, input);
+			
+			kernel->synchConsoleOut->PutCharArray(input, len);
+			
 			{
 				while(val/10>0)
 				{
@@ -266,14 +372,14 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg)+4);
 			return;
 			ASSERTNOTREACHED();
-			break;
+			break;*/
 		case SC_Exit:
 			DEBUG(dbgAddr, "Program exit\n");
-            val=kernel->machine->ReadRegister(4);
-            cout << "return value:" << val << endl;
+            		val=kernel->machine->ReadRegister(4);
+            		cout << "return value:" << val << endl;
 			kernel->currentThread->Finish();
-            break;
-      	default:
+            		break;
+      		default:
 			cerr << "Unexpected system call " << type << "\n";
 			break;
 		}

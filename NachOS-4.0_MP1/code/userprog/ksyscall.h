@@ -40,7 +40,7 @@ int SysCreate(char *filename)
         // negtive: failed
         // larger than 0: openfilw object address
         return (int)&(kernel->interrupt->OpenFile(filename));
-}*/
+}
 
 
 OpenFileId SysOpen(char *name)//change OpenFileId to int
@@ -64,7 +64,7 @@ int SysClose(OpenFileId id)//change OpenFileId to int
 {
 	return kernel->fileSystem->CloseFile(id);
 }
-
+*/
 
 
 #endif /* ! __USERPROG_KSYSCALL_H__ */

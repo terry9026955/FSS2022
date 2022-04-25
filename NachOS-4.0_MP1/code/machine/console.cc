@@ -172,3 +172,13 @@ ConsoleOutput::PutChar(char ch)
     kernel->interrupt->Schedule(this, ConsoleTime, ConsoleWriteInt);
 }
 
+
+//Add this new one, HW1
+void
+ConsoleOutput::PutCharArray(char *ch, int len)
+{
+    ASSERT(putBusy == FALSE);
+    WriteFile(writeFileNo, ch, sizeof(len));
+    putBusy = TRUE;
+    kernel->interrupt->Schedule(this, ConsoleTime, ConsoleWriteInt);
+}
