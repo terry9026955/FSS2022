@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+rm -rf /tmp/ssd
+mkdir /tmp/ssd
+chmod 777 /tmp/ssd
