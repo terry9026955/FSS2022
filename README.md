@@ -17,3 +17,11 @@ https://goroyeh56.github.io/projects/OperatingSystem/
 https://github.com/sunnyanthony/OS_Concept_gitbook/blob/master/machine_problem_1.md
 
 https://sunnyanthony.gitbooks.io/operating-system-concept/content/machine_problem_1.html
+
+
+
+
+
+HW2:
+群聯外師授課
+實作SSD讀寫
