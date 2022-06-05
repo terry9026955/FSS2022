@@ -1,4 +1,5 @@
 /*
+  110598040 CHEN TING HAO
   FUSE ssd: FUSE ioctl example
   Copyright (C) 2008       SUSE Linux Products GmbH
   Copyright (C) 2008       Tejun Heo <teheo@suse.de>
@@ -189,24 +190,59 @@ static unsigned int get_next_pca()
 
 static int ftl_read( char* buf, size_t lba)
 {
-    unsigned int pca = L2P[lba];
-    if( pca == INVALID_PCA) return 0;
-    if( pca > FULL_PCA) return 0;
-    return nand_read(buf, pca);
+    // TODO
+    int pca;
+    int ret;
+    PCA_RULE my_pca;
+
+    if(lba >= logic_size){
+        printf("lba %d over logic size %d\n", lba, logic_size);
+        return -EINVAL;
+    }
+    pca = get_next_pca();
+    if(pca == INVALID_PCA){
+        printf("lba %d not found\n", lba);
+        return -EINVAL;
+    }
+
+    ret = nand_read(buf, pca);
+    if(ret < 0){
+        printf("nand read fail.\n");
+    }else{
+        printf("nand read success.\n");
+        return ret;
+    }
+
+    return 0;
 }
 
-static int ftl_write(const char* buf, size_t lba_range, size_t lba)
+static int ftl_write(const char* buf, size_t lba_rnage, size_t lba)
 {
-    unsigned int pca = get_next_pca();
-    L2P[lba] = pca;
-    if (lba_range < 512) {
-        char* tmp_buf = calloc(512, sizeof(char));
-        memcpy(tmp_buf, buf, lba_range);
-        nand_write(tmp_buf, pca);
-        free(tmp_buf);
-        return 512;
+    // TODO
+    int pca;
+    int ret;
+    PCA_RULE my_pca;
+
+    if(lba >= logic_size){
+        printf("lba %d over logic size %d\n", lba, logic_size);
+        return -EINVAL;
     }
-    return nand_write(buf, pca);
+    pca = get_next_pca();
+    if(pca == INVALID_PCA){
+        printf("lba %d not found\n", lba);
+        return -EINVAL;
+    }
+
+    ret = nand_write(buf, pca);
+    if(ret < 0){
+        printf("nand write fail.\n");
+    }else{
+        printf("nand write success.\n");
+        L2P[lba] = pca;
+        return ret;
+    }
+
+    return 0;
 }
 
 
@@ -275,10 +311,13 @@ static int ssd_do_read(char* buf, size_t size, off_t offset)
 	tmp_lba_range = (offset + size - 1) / 512 - (tmp_lba) + 1;
     tmp_buf = calloc(tmp_lba_range * 512, sizeof(char));
 
-    for (int i = 0; i < tmp_lba_range; i++) 
-    {
-        char* src_buf = &tmp_buf[i*512];
-        ftl_read(src_buf, tmp_lba + i);
+    for (int i = 0; i < tmp_lba_range; i++) {
+        // TODO
+        rst = ftl_read(tmp_buf + i*512, tmp_lba + i );
+        if(rst < 0){
+            printf("read fail.\n");
+            return rst;
+        }
     }
 
     memcpy(buf, tmp_buf + offset % 512, size);
@@ -315,20 +354,14 @@ static int ssd_do_write(const char* buf, size_t size, off_t offset)
     curr_size = 0;
     for (idx = 0; idx < tmp_lba_range; idx++)
     {
-        if(remain_size >= 512) 
-        {
-            curr_size = 512;
-            remain_size -= 512;
-            process_size += 512;
+        // TODO 貌似還未完成non align部分
+        curr_size = remain_size > 512 ? 512 : remain_size;
+        if(ftl_write(buf + process_size, curr_size, tmp_lba +idx) < 0){
+            printf("write fail.\n");
+            return -EIO;
         }
-        else
-        {
-            curr_size = remain_size;
-            process_size += remain_size;
-            remain_size = 0;
-        }
-        char* src_buf = &buf[idx*512];
-        ftl_write(src_buf, curr_size, tmp_lba + idx);
+        process_size += curr_size;
+        remain_size -= curr_size;
     }
 
     return size;
@@ -419,7 +452,7 @@ int main(int argc, char* argv[])
     L2P = malloc(LOGICAL_NAND_NUM * NAND_SIZE_KB * 1024 / 512 * sizeof(int));
     memset(L2P, INVALID_PCA, sizeof(int)*LOGICAL_NAND_NUM * NAND_SIZE_KB * 1024 / 512);
 
-    // //create nand file
+    //create nand file
     for (idx = 0; idx < PHYSICAL_NAND_NUM; idx++)
     {
         FILE* fptr;

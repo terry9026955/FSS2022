@@ -13,7 +13,7 @@
 #define NAND_SIZE_KB (10)
 #define INVALID_PCA     (0xFFFFFFFF)
 #define FULL_PCA     (0xFFFFFFFE)
-#define NAND_LOCATION  "/home/slime/ssd_fuse_tmp"
+#define NAND_LOCATION  "/home/teigou/Desktop/HW/NachOS-4.0_MP1"
 
 enum
 {
